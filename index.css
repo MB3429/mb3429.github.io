@@ -28,7 +28,7 @@ header {
   gap: 6px;
 }
 
-#header-buttons a{
+.header-button{
   cursor: pointer;
   flex: 1;
   padding: 8px;
@@ -38,7 +38,7 @@ header {
   color: black;
 }
 
-#header-buttons a[aria-selected='true']{
+.header-button[aria-selected='true']{
   background-color: white;
 }
 
