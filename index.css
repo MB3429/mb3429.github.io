@@ -28,15 +28,17 @@ header {
   gap: 6px;
 }
 
-#header-buttons div{
+#header-buttons a{
   cursor: pointer;
   flex: 1;
   padding: 8px;
   border-radius: 10px 10px 0 0;
   background-color: rgb(200, 200, 200);
+  text-decoration: none;
+  color: black;
 }
 
-#header-buttons div[aria-selected='true']{
+#header-buttons a[aria-selected='true']{
   background-color: white;
 }
 
