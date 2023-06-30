@@ -1,0 +1,33 @@
+main {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(300px, 400px));
+  gap: 10px;
+  justify-content: center;
+}
+
+main div {
+  background-color: lightblue;
+  aspect-ratio: 16/9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+}
+
+@media (max-width: 1400px) {
+  main {
+    grid-template-columns: repeat(3, minmax(300px, 400px));
+  }
+}
+
+@media (max-width: 1050px) {
+  main {
+    grid-template-columns: repeat(2, minmax(300px, 400px));
+  }
+}
+
+@media (max-width: 700px) {
+  main {
+    grid-template-columns: repeat(1, minmax(300px, 400px));
+  }
+}
