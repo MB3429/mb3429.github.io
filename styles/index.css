@@ -5,13 +5,17 @@ main {
   justify-content: center;
 }
 
-main div {
+main a {
   background-color: lightblue;
   aspect-ratio: 16/9;
   display: flex;
   justify-content: center;
   align-items: center;
   border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  color: black;
+  font-size: 30px;
 }
 
 @media (max-width: 1400px) {

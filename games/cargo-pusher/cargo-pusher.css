@@ -1,0 +1,16 @@
+main {
+  text-align: center;
+}
+
+#game-title {
+  font-size: 50px;
+  margin-top: 5px;
+  margin-bottom: 25px;
+}
+
+#game-canvas {
+  width: clamp(400px, 80vw, 1000px);
+  background-image: url(https://variety.com/wp-content/uploads/2021/07/Rick-Astley-Never-Gonna-Give-You-Up.png);
+  background-size: contain;
+  aspect-ratio: 16/9;
+}
