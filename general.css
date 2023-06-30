@@ -1,0 +1,46 @@
+body {
+  height: 2000px;
+  font-family: Roboto;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 128.5px;
+}
+
+header {
+  right: 0;
+  left: 0;
+  top: 0;
+  background-color: rgb(220, 220, 220);
+  position: fixed;
+  z-index: 100;
+  text-align: center;
+  overflow: hidden;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+#header-title {
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+#header-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  column-gap: 10px;
+}
+
+#header-buttons a{
+  cursor: pointer;
+  flex: 1;
+  padding: 8px;
+  border-radius: 10px 10px 0 0;
+  background-color: rgb(200, 200, 200);
+  text-decoration: none;
+  color: black;
+}
+
+#header-buttons a[aria-selected='true']{
+  background-color: white;
+}

@@ -1,51 +1,8 @@
-body {
-  height: 2000px;
-  font-family: Roboto;
-  padding-top: 108.5px;
-}
-
-header {
-  right: 0;
-  left: 0;
-  top: 0;
-  background-color: rgb(220, 220, 220);
-  position: fixed;
-  z-index: 100;
-  text-align: center;
-  overflow: hidden;
-  padding-left: 8px;
-  padding-right: 8px;
-}
-
-#header-title {
-  margin-top: 20px;
-  margin-bottom: 15px;
-}
-
-#header-buttons {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.header-button{
-  cursor: pointer;
-  flex: 1;
-  padding: 8px;
-  border-radius: 10px 10px 0 0;
-  background-color: rgb(200, 200, 200);
-  text-decoration: none;
-  color: black;
-}
-
-.header-button[aria-selected='true']{
-  background-color: white;
-}
-
 main {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 5px;
+  grid-template-columns: repeat(4, minmax(300px, 400px));
+  gap: 10px;
+  justify-content: center;
 }
 
 main div {
@@ -54,4 +11,23 @@ main div {
   display: flex;
   justify-content: center;
   align-items: center;
+  border-radius: 10px;
+}
+
+@media (max-width: 1400px) {
+  main {
+    grid-template-columns: repeat(3, minmax(300px, 400px));
+  }
+}
+
+@media (max-width: 1050px) {
+  main {
+    grid-template-columns: repeat(2, minmax(300px, 400px));
+  }
+}
+
+@media (max-width: 700px) {
+  main {
+    grid-template-columns: repeat(1, minmax(300px, 400px));
+  }
 }
