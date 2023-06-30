@@ -84,14 +84,33 @@ function handlePress(Event) {
   }
 }
 
-function checkPlayerCollision() {
-  const deltaX = Math.round(Math.cos(playerDir*Math.PI/2));
-  const deltaY = Math.round(Math.sin(playerDir*Math.PI/2));
+function checkPlayerCollision(dir = playerDir, pos = playerPos) {
+  const deltaX = Math.round(Math.cos(dir*Math.PI/2));
+  const deltaY = Math.round(Math.sin(dir*Math.PI/2));
   const nextPos = [
-    playerPos[0]+deltaX,
-    playerPos[1]+deltaY
+    pos[0]+deltaX,
+    pos[1]+deltaY
   ]
   const collidedItem = levelItems[nextPos[1]][nextPos[0]];
-  const collided = collidedItem !== 0;
+  let collided = collidedItem !== 0;
+  if (collided) {
+    const collision2 = checkPlayerCollision(playerDir, nextPos)
+    if (!collision2) {
+      moveTile(dir, nextPos);
+      collided = false;
+    }
+  }
   return collided;
+}
+
+function moveTile(dir, pos) {
+  const deltaX = Math.round(Math.cos(dir*Math.PI/2));
+  const deltaY = Math.round(Math.sin(dir*Math.PI/2));
+  const nextPos = [
+    pos[0]+deltaX,
+    pos[1]+deltaY
+  ]
+  console.log(nextPos)
+  levelItems[nextPos[1]][nextPos[0]] = levelItems[pos[1]][pos[0]];
+  levelItems[pos[1]][pos[0]] = 0;
 }
