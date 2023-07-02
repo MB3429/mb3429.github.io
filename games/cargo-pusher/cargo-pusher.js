@@ -4,7 +4,7 @@ context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
 let curScreen = 'start';
-let settingsOpen = true;
+let settingsOpen = false;
 const spriteList = document.getElementsByClassName('sprite');
 const iconList = document.getElementsByClassName('icon');
 let inputTimeout = true;
@@ -66,10 +66,10 @@ function handleStartScreen() {
   context.font = '40px "Press Start 2P"';
   context.fillText('Play', width/2, height/2+103);
   context.fillText('Cargo Pusher', width/2, height/2-50);
-  context.drawImage(spriteList[0],0,0,32,32,width/2-160,height/2-32,64,64);
-  context.drawImage(spriteList[2],width/2-96,height/2-32,64,64);
-  context.drawImage(spriteList[4],width/2-32,height/2-32,64,64);
-  context.drawImage(spriteList[6],width/2+32,height/2-32,64,64);
+  context.drawImage(spriteList[0],0,0,32,32,width/2-128,height/2-32,64,64);
+  context.drawImage(spriteList[2],width/2-64,height/2-32,64,64);
+  context.drawImage(spriteList[4],width/2,height/2-32,64,64);
+  context.drawImage(spriteList[6],width/2+64,height/2-32,64,64);
 }
 
 function handleSettingsIcon() {
@@ -84,8 +84,8 @@ function handleSettingsIcon() {
 
 function handleSettingsScreen() {
   context.lineWidth = 4;
-  const settingsWidth = 200;
-  const settingsHeight = 250;
+  const settingsWidth = 190;
+  const settingsHeight = 125;
   context.clearRect(630-settingsWidth,10,settingsWidth,settingsHeight);
   context.strokeRect(630-settingsWidth,10,settingsWidth,settingsHeight);
   context.drawImage(iconList[0],13,0,13,13,width-15-52,15,52,52);
@@ -103,16 +103,24 @@ function handleVolumeIcon(settingsWidth) {
   ) {
     savedData.volume = (savedData.volume + 1) % 3;
     localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
-  };
+  }
   context.drawImage(iconList[1],savedData.volume * 13,0,13,13,temp,15,52,52);
 }
 
 function handleMobileButton(settingsWidth) {
-  let temp = settingsWidth/10
-  context.strokeRect(630-9*temp,80,8*temp,40)
-  clickableRegions.push([630-9*temp,80,8*temp,40])
+  let temp = settingsWidth/12;
+  context.strokeRect(630-11*temp,80,10*temp,40);
+  clickableRegions.push([630-11*temp,80,10*temp,40])
+  if (clickX > 630-11*temp &&
+    clickX < 630-temp &&
+    clickY > 80 &&
+    clickY < 120
+  ) {
+    savedData.mobileMode = !savedData.mobileMode;
+    localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
+  }
   context.font = '24px "Press Start 2P"'
-  context.fillText('Mobile',630-settingsWidth/2,114)
+  context.fillText(savedData.mobileMode ? 'Mobile' : 'PC',630-settingsWidth/2,114)
 }
 
 canvas.addEventListener('mousemove', Event => {
@@ -124,9 +132,7 @@ canvas.addEventListener('mousemove', Event => {
     mouseX < region[0] + region[2] &&
     mouseY > region[1] &&
     mouseY < region[1] + region[3]
-    ) {
-      canvas.style.cursor = 'pointer';
-    }
+    ) canvas.style.cursor = 'pointer';
   })
 })
 
