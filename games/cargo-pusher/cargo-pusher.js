@@ -1,125 +1,136 @@
 const canvas = document.getElementById('game-canvas');
 const context = canvas.getContext('2d');
-let currentMenu = 'home'
-let inputCooldown = 0;
+context.imageSmoothingEnabled = false;
+const width = canvas.width;
+const height = canvas.height;
+let curScreen = 'start';
+let settingsOpen = true;
+const spriteList = document.getElementsByClassName('sprite');
+const iconList = document.getElementsByClassName('icon');
+let inputTimeout = true;
+let interval;
+let savedData = JSON.parse(localStorage.getItem('cargo-pusher')) || {
+  lastLevelUnlocked: 10,
+  volume: 2,
+  mobileMode: false,
+  keyUp: 'ArrowUp',
+  keyDown: 'ArrowDown',
+  keyLeft: 'ArrowLeft',
+  keyRight: 'ArrowRight'
+};
+let mouseX = 0;
+let mouseY = 0;
+const clickableRegions = []
+let clickX = -100;
+let clickY = -100;
 
-let levelFloor = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
-let levelItems = [[0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 0, 0], [0, 0, 0, 0]]
-let levelWidth = levelFloor[0].length;
-let levelHeight = levelFloor.length;
-let tileSize = 32;
-let playerPos = [0, 1]
-let playerDir = 0;
-const spriteList = [];
-{
-  loadSprite('plain_floor');
-  loadSprite('crate');
+canvas.onload = load();
+
+function load() {
+  document.getElementById('game-title').classList.add('hidden')
+  interval = setInterval(tickGame, 100);
+  localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
 }
-
-function loadSprite(name) {
-  const tempImage = new Image();
-  tempImage.src = `/games/cargo-pusher/sprites/${name}.png`;
-  spriteList.push(tempImage);
-}
-
-
-setInterval(tickGame, 100);
 
 function tickGame() {
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  drawFloor();
-  if (inputCooldown) inputCooldown--;
-}
-
-function drawFloor() {
-  const startX = canvas.width / 2 - levelWidth * tileSize / 2;
-  const startY = canvas.height / 2 - levelHeight * tileSize / 2;
-  for (let row = 0; row < levelHeight; row++) {
-    for (let column = 0; column < levelWidth; column++) {
-      drawSprite(startX, startY, column, row, levelFloor[row][column]);
-      if (levelItems[row][column]) {
-        drawSprite(startX, startY, column, row, levelItems[row][column]);
-      }
-    }
-  }
-  drawSprite(startX, startY, playerPos[0], playerPos[1], 1);
-}
-
-function drawSprite(startX, startY, tileX, tileY, sprite) {
-  context.drawImage(spriteList[sprite],
-    startX + tileX * tileSize,
-    startY + tileY * tileSize,
-    tileSize,
-    tileSize
-  );
-}
-
-canvas.addEventListener('keydown', handlePress);
-
-function handlePress(Event) {
-  if (inputCooldown !== 0) return;
-  switch (Event.key) {
-    case 'ArrowLeft':
-    case 'a': {
-      playerDir = 2;
-      if (checkPlayerCollision()) break;
-      playerPos[0]--;
-      inputCooldown = 1;
+  clickableRegions.length = 0;
+  context.clearRect(0, 0, width, height)
+  switch (curScreen) {
+    case 'start': {
+      handleStartScreen();
       break;
     }
-    case 'ArrowRight':
-    case 'd': {
-      playerDir = 0;
-      if (checkPlayerCollision()) break;
-      playerPos[0]++;
-      inputCooldown = 1;
+
+    case 'levels': {
       break;
     }
-    case 'ArrowUp':
-    case 'w': {
-      playerDir = 3;
-      if (checkPlayerCollision()) break;
-      playerPos[1]--;
-      inputCooldown = 1;
-      break;
-    }
-    case 'ArrowDown':
-    case 's': {
-      playerDir = 1;
-      if (checkPlayerCollision()) break;
-      playerPos[1]++;
-      inputCooldown = 1;
+
+    case 'inLevel': {
       break;
     }
   }
-}
-
-function checkPlayerCollision(dir = playerDir, pos = playerPos) {
-  const deltaX = Math.round(Math.cos(dir*Math.PI/2));
-  const deltaY = Math.round(Math.sin(dir*Math.PI/2));
-  const nextPos = [
-    pos[0]+deltaX,
-    pos[1]+deltaY
-  ]
-  const collidedItem = levelItems[nextPos[1]][nextPos[0]];
-  let collided = collidedItem !== 0;
-  if (collided) {
-    const collision2 = checkPlayerCollision(playerDir, nextPos)
-    if (!collision2) {
-      moveTile(dir, nextPos);
-      collided = false;
-    }
+  handleSettingsIcon();
+  if (settingsOpen) {
+    handleSettingsScreen();
   }
-  return collided;
+  clickX = -100;
+  clickY = -100;
 }
 
-function moveTile(dir, pos) {
-  const deltaX = Math.round(Math.cos(dir*Math.PI/2));
-  const deltaY = Math.round(Math.sin(dir*Math.PI/2));
-  const nextPos = [
-    pos[0]+deltaX,
-    pos[1]+deltaY
-  ]
-  levelItems[nextPos[1]][nextPos[0]] = levelItems[pos[1]][pos[0]];
-  levelItems[pos[1]][pos[0]] = 0;
+function handleStartScreen() {
+  context.fillStyle = 'red';
+  context.fillRect(width/2-150, height/2+50, 300, 60);
+  clickableRegions.push([width/2-150, height/2+50, 300, 60]);
+  context.fillStyle = 'black';
+  context.textAlign = 'center';
+  context.font = '40px "Press Start 2P"';
+  context.fillText('Play', width/2, height/2+103);
+  context.fillText('Cargo Pusher', width/2, height/2-50);
+  context.drawImage(spriteList[0],0,0,32,32,width/2-160,height/2-32,64,64);
+  context.drawImage(spriteList[2],width/2-96,height/2-32,64,64);
+  context.drawImage(spriteList[4],width/2-32,height/2-32,64,64);
+  context.drawImage(spriteList[6],width/2+32,height/2-32,64,64);
 }
+
+function handleSettingsIcon() {
+  clickableRegions.push([width-15-52,15,52,52]);
+  if (clickX > width-67 &&
+    clickX < width-15 &&
+    clickY > 15 &&
+    clickY < 67
+  ) settingsOpen = !settingsOpen;
+  context.drawImage(iconList[0],0,0,13,13,width-15-52,15,52,52)
+}
+
+function handleSettingsScreen() {
+  context.lineWidth = 4;
+  const settingsWidth = 200;
+  const settingsHeight = 250;
+  context.clearRect(630-settingsWidth,10,settingsWidth,settingsHeight);
+  context.strokeRect(630-settingsWidth,10,settingsWidth,settingsHeight);
+  context.drawImage(iconList[0],13,0,13,13,width-15-52,15,52,52);
+  handleVolumeIcon(settingsWidth);
+  handleMobileButton(settingsWidth);
+}
+
+function handleVolumeIcon(settingsWidth) {
+  let temp = 640-settingsWidth
+  clickableRegions.push([temp,15,52,52]);
+  if (clickX > temp &&
+    clickX < temp+52 &&
+    clickY > 15 &&
+    clickY < 67
+  ) {
+    savedData.volume = (savedData.volume + 1) % 3;
+    localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
+  };
+  context.drawImage(iconList[1],savedData.volume * 13,0,13,13,temp,15,52,52);
+}
+
+function handleMobileButton(settingsWidth) {
+  let temp = settingsWidth/10
+  context.strokeRect(630-9*temp,80,8*temp,40)
+  clickableRegions.push([630-9*temp,80,8*temp,40])
+  context.font = '24px "Press Start 2P"'
+  context.fillText('Mobile',630-settingsWidth/2,114)
+}
+
+canvas.addEventListener('mousemove', Event => {
+  mouseX = (Event.clientX - canvas.offsetLeft)/canvas.offsetWidth*640;
+  mouseY = (Event.clientY - canvas.offsetTop)/canvas.offsetHeight*480;
+  canvas.style.cursor = 'default';
+  clickableRegions.forEach(region => {
+    if (mouseX > region[0] &&
+    mouseX < region[0] + region[2] &&
+    mouseY > region[1] &&
+    mouseY < region[1] + region[3]
+    ) {
+      canvas.style.cursor = 'pointer';
+    }
+  })
+})
+
+canvas.addEventListener('click', () => {
+  clickX = mouseX;
+  clickY =  mouseY
+})
