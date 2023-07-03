@@ -69,10 +69,16 @@ function tickGame() {
     canvas.style.cursor = 'default';
     if (transition.frame > 0) {
       transition.frame--;
+      if (transition.frame < 10) {
+        context.fillStyle = `rgba(0,0,0,${1-transition.frame/10})`;
+        context.fillRect(0,0,width,height);
+      }
     } else {
       curScreen = transition.endScreen;
       transition = undefined;
       transitionIn = { frame: 10 };
+      context.fillStyle = 'black';
+      context.fillRect(0,0,width,height);
     }
   }
 
@@ -107,23 +113,20 @@ function handleStartScreen() {
   context.fillText('Play', width/2, height/2+103);
   context.fillText('Cargo Pusher', width/2, height/2-50);
 
-  context.drawImage(spriteList[4],width/2,height/2-32,64,64);
-  context.drawImage(spriteList[6],width/2+64,height/2-32,64,64);
+  context.drawImage(spriteList[4],width/2-4,height/2-32,64,64);
+  context.drawImage(spriteList[6],width/2+60,height/2-32,64,64);
 
   if (transition === undefined) {
-    context.drawImage(spriteList[0],0,0,32,32,width/2-128,height/2-32,64,64);
-    context.drawImage(spriteList[2],width/2-64,height/2-32,64,64);
+    context.drawImage(spriteList[0],0,0,32,32,width/2-132,height/2-32,64,64);
+    context.drawImage(spriteList[2],width/2-68,height/2-32,64,64);
 
   } else if (transition.frame > 10) {
-    context.drawImage(spriteList[0],0,0,32,32,width/2-128+6.4*(20-transition.frame),height/2-32,64,64);
-    context.drawImage(spriteList[2],width/2-64+6.4*(20-transition.frame),height/2-32,64,64);
+    context.drawImage(spriteList[0],0,0,32,32,width/2-132+6.4*(20-transition.frame),height/2-32,64,64);
+    context.drawImage(spriteList[2],width/2-68+6.4*(20-transition.frame),height/2-32,64,64);
 
   } else {
-    context.drawImage(spriteList[0],0,0,32,32,width/2-64,height/2-32,64,64);
-    context.drawImage(spriteList[2],width/2,height/2-32,64,64);
-
-    context.fillStyle = `rgba(0,0,0,${1-transition.frame/10})`;
-    context.fillRect(0,0,width,height);
+    context.drawImage(spriteList[0],0,0,32,32,width/2-68,height/2-32,64,64);
+    context.drawImage(spriteList[2],width/2-4,height/2-32,64,64);
   }
 }
 
@@ -162,8 +165,39 @@ function handleVolumeIcon(settingsWidth) {
   context.drawImage(iconList[1],savedData.volume * 13,0,13,13,temp,15,52,52);
 }
 
+function handleMobileButton(settingsWidth) {
+  let temp = settingsWidth/12;
+  context.strokeRect(630-11*temp,80,10*temp,40);
+  clickableRegions.push([630-11*temp,80,10*temp,40])
+  if (clickX > 630-11*temp &&
+    clickX < 630-temp &&
+    clickY > 80 &&
+    clickY < 120
+  ) {
+    savedData.mobileMode = !savedData.mobileMode;
+    localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
+  }
+  context.fillStyle = 'black';
+  context.textAlign = 'center';
+  context.font = '24px "Press Start 2P"';
+  context.fillText(savedData.mobileMode ? 'Mobile' : 'PC',630-settingsWidth/2,114);
+}
+
 function handleLevelsScreen() {
-  context.drawImage(spriteList[1],100,100,64,64)
+  context.font = '24px "Press Start 2P"';
+  context.fillStyle = 'black'
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 4; j++) {
+      context.drawImage(spriteList[1],38+100*i,90+100*j,64,64);
+      context.textAlign = 'center';
+      if (savedData.lastLevelUnlocked < j*6+i+1) {
+        context.drawImage(iconList[3],46+100*i,98+100*j,48,48);
+      } else {
+        clickableRegions.push([38+100*i,90+100*j,64,64]);
+        context.fillText(j*6+i+1,70+100*i,136+100*j,64,64);
+      }
+    }
+  }
   handleHomeIcon();
 }
 
@@ -181,29 +215,6 @@ function handleHomeIcon() {
 
   context.drawImage(iconList[2],15,15,52,52);
   clickableRegions.push([15,15,52,52]);
-
-  if (transition !== undefined) {
-    context.fillStyle = `rgba(0,0,0,${1-transition.frame/10})`;
-    context.fillRect(0,0,width,height);
-  }
-}
-
-function handleMobileButton(settingsWidth) {
-  let temp = settingsWidth/12;
-  context.strokeRect(630-11*temp,80,10*temp,40);
-  clickableRegions.push([630-11*temp,80,10*temp,40])
-  if (clickX > 630-11*temp &&
-    clickX < 630-temp &&
-    clickY > 80 &&
-    clickY < 120
-  ) {
-    savedData.mobileMode = !savedData.mobileMode;
-    localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
-  }
-  context.fillStyle = 'black';
-  context.textAlign = 'center';
-  context.font = '24px "Press Start 2P"';
-  context.fillText(savedData.mobileMode ? 'Mobile' : 'PC',630-settingsWidth/2,114);
 }
 
 canvas.addEventListener('mousemove', Event => {
