@@ -54,11 +54,6 @@ function tickGame() {
     }
   }
 
-  handleSettingsIcon();
-  if (settingsOpen) {
-    handleSettingsScreen();
-  }
-
   if (transitionIn !== undefined) {
     if (transitionIn.frame > 0) {
       context.fillStyle = `rgba(0,0,0,${transitionIn.frame/10})`;
@@ -70,6 +65,7 @@ function tickGame() {
   }
   
   if (transition !== undefined) {
+    settingsOpen = false;
     canvas.style.cursor = 'default';
     if (transition.frame > 0) {
       transition.frame--;
@@ -78,6 +74,11 @@ function tickGame() {
       transition = undefined;
       transitionIn = { frame: 10 };
     }
+  }
+
+  handleSettingsIcon();
+  if (settingsOpen) {
+    handleSettingsScreen();
   }
 
   clickX = -100;
@@ -200,6 +201,7 @@ function handleMobileButton(settingsWidth) {
     localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
   }
   context.fillStyle = 'black';
+  context.textAlign = 'center';
   context.font = '24px "Press Start 2P"';
   context.fillText(savedData.mobileMode ? 'Mobile' : 'PC',630-settingsWidth/2,114);
 }
