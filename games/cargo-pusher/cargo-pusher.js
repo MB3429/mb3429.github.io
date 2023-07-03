@@ -12,17 +12,15 @@ let interval;
 let savedData = JSON.parse(localStorage.getItem('cargo-pusher')) || {
   lastLevelUnlocked: 10,
   volume: 2,
-  mobileMode: false,
-  keyUp: 'ArrowUp',
-  keyDown: 'ArrowDown',
-  keyLeft: 'ArrowLeft',
-  keyRight: 'ArrowRight'
+  mobileMode: false
 };
 let mouseX = 0;
 let mouseY = 0;
 const clickableRegions = []
 let clickX = -100;
 let clickY = -100;
+let transition = undefined;
+let transitionIn = undefined;
 
 canvas.onload = load();
 
@@ -35,6 +33,7 @@ function load() {
 function tickGame() {
   clickableRegions.length = 0;
   context.clearRect(0, 0, width, height)
+
   switch (curScreen) {
     case 'start': {
       handleStartScreen();
@@ -48,28 +47,83 @@ function tickGame() {
     case 'inLevel': {
       break;
     }
+    
+    case 'info': {
+      break;
+    }
   }
+
   handleSettingsIcon();
   if (settingsOpen) {
     handleSettingsScreen();
   }
+
+  if (transitionIn !== undefined) {
+    if (transitionIn.frame > 0) {
+      context.fillStyle = `rgba(0,0,0,${transitionIn.frame/10})`;
+      context.fillRect(0,0,width,height);
+      transitionIn.frame--;
+    } else {
+      transitionIn = undefined;
+    }
+  }
+  
+  if (transition !== undefined) {
+    canvas.style.cursor = 'default';
+    if (transition.frame > 0) {
+      transition.frame--;
+    } else {
+      curScreen = transition.endScreen;
+      transition = undefined;
+      transitionIn = { frame: 10 };
+    }
+  }
+
   clickX = -100;
   clickY = -100;
 }
 
 function handleStartScreen() {
-  context.fillStyle = 'red';
-  context.fillRect(width/2-150, height/2+50, 300, 60);
+  if (clickX > width/2-150 &&
+    clickX < width/2+150 &&
+    clickY > height/2+50 &&
+    clickY < height/2+110
+  ) {
+    transition = {
+      frame: 20,
+      endScreen: 'levels'
+    };
+  }
+
+  let pushAmount = 0;
+  context.lineWidth = 4;
+  context.strokeRect(width/2-150, height/2+50, 300, 60);
   clickableRegions.push([width/2-150, height/2+50, 300, 60]);
+
   context.fillStyle = 'black';
   context.textAlign = 'center';
   context.font = '40px "Press Start 2P"';
   context.fillText('Play', width/2, height/2+103);
   context.fillText('Cargo Pusher', width/2, height/2-50);
-  context.drawImage(spriteList[0],0,0,32,32,width/2-128,height/2-32,64,64);
-  context.drawImage(spriteList[2],width/2-64,height/2-32,64,64);
+
   context.drawImage(spriteList[4],width/2,height/2-32,64,64);
   context.drawImage(spriteList[6],width/2+64,height/2-32,64,64);
+
+  if (transition === undefined) {
+    context.drawImage(spriteList[0],0,0,32,32,width/2-128,height/2-32,64,64);
+    context.drawImage(spriteList[2],width/2-64,height/2-32,64,64);
+
+  } else if (transition.frame > 10) {
+    context.drawImage(spriteList[0],0,0,32,32,width/2-128+6.4*(20-transition.frame),height/2-32,64,64);
+    context.drawImage(spriteList[2],width/2-64+6.4*(20-transition.frame),height/2-32,64,64);
+
+  } else {
+    context.drawImage(spriteList[0],0,0,32,32,width/2-64,height/2-32,64,64);
+    context.drawImage(spriteList[2],width/2,height/2-32,64,64);
+
+    context.fillStyle = `rgba(0,0,0,${1-transition.frame/10})`;
+    context.fillRect(0,0,width,height);
+  }
 }
 
 function handleSettingsIcon() {
@@ -79,7 +133,7 @@ function handleSettingsIcon() {
     clickY > 15 &&
     clickY < 67
   ) settingsOpen = !settingsOpen;
-  context.drawImage(iconList[0],0,0,13,13,width-15-52,15,52,52)
+  if (!settingsOpen) context.drawImage(iconList[0],0,0,13,13,width-15-52,15,52,52)
 }
 
 function handleSettingsScreen() {
@@ -124,19 +178,23 @@ function handleMobileButton(settingsWidth) {
 }
 
 canvas.addEventListener('mousemove', Event => {
-  mouseX = (Event.clientX - canvas.offsetLeft)/canvas.offsetWidth*640;
-  mouseY = (Event.clientY - canvas.offsetTop)/canvas.offsetHeight*480;
-  canvas.style.cursor = 'default';
-  clickableRegions.forEach(region => {
-    if (mouseX > region[0] &&
-    mouseX < region[0] + region[2] &&
-    mouseY > region[1] &&
-    mouseY < region[1] + region[3]
-    ) canvas.style.cursor = 'pointer';
-  })
+  if (transition === undefined && transitionIn === undefined) {
+    mouseX = (Event.clientX - canvas.offsetLeft)/canvas.offsetWidth*640;
+    mouseY = (Event.clientY - canvas.offsetTop)/canvas.offsetHeight*480;
+    canvas.style.cursor = 'default';
+    clickableRegions.forEach(region => {
+      if (mouseX > region[0] &&
+      mouseX < region[0] + region[2] &&
+      mouseY > region[1] &&
+      mouseY < region[1] + region[3]
+      ) canvas.style.cursor = 'pointer';
+    })
+  }
 })
 
 canvas.addEventListener('click', () => {
-  clickX = mouseX;
-  clickY =  mouseY
+  if (transition === undefined && transitionIn === undefined) {
+    clickX = mouseX;
+    clickY = mouseY;
+  }
 })
