@@ -3,7 +3,7 @@ const context = canvas.getContext('2d');
 context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
-let curScreen = 'start';
+let curScreen = 'levels';
 let settingsOpen = false;
 const spriteList = document.getElementsByClassName('sprite');
 const iconList = document.getElementsByClassName('icon');
@@ -41,6 +41,7 @@ function tickGame() {
     }
 
     case 'levels': {
+      handleLevelsScreen();
       break;
     }
 
@@ -158,6 +159,32 @@ function handleVolumeIcon(settingsWidth) {
     localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
   }
   context.drawImage(iconList[1],savedData.volume * 13,0,13,13,temp,15,52,52);
+}
+
+function handleLevelsScreen() {
+  context.drawImage(spriteList[1],100,100,64,64)
+  handleHomeIcon();
+}
+
+function handleHomeIcon() {
+  if (clickX > 15 &&
+    clickX < 67 &&
+    clickY > 15 &&
+    clickY < 67
+  ) {
+    transition = {
+      frame: 10,
+      endScreen: 'start'
+    };
+  }
+
+  context.drawImage(iconList[2],15,15,52,52);
+  clickableRegions.push([15,15,52,52]);
+
+  if (transition !== undefined) {
+    context.fillStyle = `rgba(0,0,0,${1-transition.frame/10})`;
+    context.fillRect(0,0,width,height);
+  }
 }
 
 function handleMobileButton(settingsWidth) {
