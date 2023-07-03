@@ -95,7 +95,6 @@ function handleStartScreen() {
     };
   }
 
-  let pushAmount = 0;
   context.lineWidth = 4;
   context.strokeRect(width/2-150, height/2+50, 300, 60);
   clickableRegions.push([width/2-150, height/2+50, 300, 60]);
@@ -173,8 +172,9 @@ function handleMobileButton(settingsWidth) {
     savedData.mobileMode = !savedData.mobileMode;
     localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
   }
-  context.font = '24px "Press Start 2P"'
-  context.fillText(savedData.mobileMode ? 'Mobile' : 'PC',630-settingsWidth/2,114)
+  context.fillStyle = 'black';
+  context.font = '24px "Press Start 2P"';
+  context.fillText(savedData.mobileMode ? 'Mobile' : 'PC',630-settingsWidth/2,114);
 }
 
 canvas.addEventListener('mousemove', Event => {
