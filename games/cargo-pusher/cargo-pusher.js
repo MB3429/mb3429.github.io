@@ -3,7 +3,8 @@ const context = canvas.getContext('2d');
 context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
-let curScreen = 'levels';
+let curScreen = 'start';
+let curLevel = undefined;
 let settingsOpen = false;
 const spriteList = document.getElementsByClassName('sprite');
 const iconList = document.getElementsByClassName('icon');
@@ -19,6 +20,8 @@ let mouseY = 0;
 const clickableRegions = []
 let clickX = -100;
 let clickY = -100;
+let settingsClickX = clickX;
+let settingsClickY = clickY;
 let transition = undefined;
 let transitionIn = undefined;
 
@@ -34,18 +37,32 @@ function tickGame() {
   clickableRegions.length = 0;
   context.clearRect(0, 0, width, height)
 
+  settingsClickX = clickX;
+  settingsClickY = clickY;
+
+  if (settingsOpen &&
+    clickX > 440 &&
+    clickX < 630 &&
+    clickY > 10 &&
+    clickY < 135
+  ) {
+    clickX = -100;
+    clickY = -100;
+  }
+
   switch (curScreen) {
     case 'start': {
-      handleStartScreen();
+      startScreen();
       break;
     }
 
     case 'levels': {
-      handleLevelsScreen();
+      levelsScreen();
       break;
     }
 
     case 'inLevel': {
+      inLevelScreen();
       break;
     }
     
@@ -82,16 +99,16 @@ function tickGame() {
     }
   }
 
-  handleSettingsIcon();
+  settingsIcon();
   if (settingsOpen) {
-    handleSettingsScreen();
+    settingsScreen();
   }
 
   clickX = -100;
   clickY = -100;
 }
 
-function handleStartScreen() {
+function startScreen() {
   if (clickX > width/2-150 &&
     clickX < width/2+150 &&
     clickY > height/2+50 &&
@@ -130,34 +147,34 @@ function handleStartScreen() {
   }
 }
 
-function handleSettingsIcon() {
+function settingsIcon() {
   clickableRegions.push([width-15-52,15,52,52]);
-  if (clickX > width-67 &&
-    clickX < width-15 &&
-    clickY > 15 &&
-    clickY < 67
+  if (settingsClickX > width-67 &&
+    settingsClickX < width-15 &&
+    settingsClickY > 15 &&
+    settingsClickY < 67
   ) settingsOpen = !settingsOpen;
   if (!settingsOpen) context.drawImage(iconList[0],0,0,13,13,width-15-52,15,52,52)
 }
 
-function handleSettingsScreen() {
+function settingsScreen() {
   context.lineWidth = 4;
   const settingsWidth = 190;
   const settingsHeight = 125;
   context.clearRect(630-settingsWidth,10,settingsWidth,settingsHeight);
   context.strokeRect(630-settingsWidth,10,settingsWidth,settingsHeight);
   context.drawImage(iconList[0],13,0,13,13,width-15-52,15,52,52);
-  handleVolumeIcon(settingsWidth);
-  handleMobileButton(settingsWidth);
+  volumeIcon(settingsWidth);
+  mobileButton(settingsWidth);
 }
 
-function handleVolumeIcon(settingsWidth) {
+function volumeIcon(settingsWidth) {
   let temp = 640-settingsWidth
   clickableRegions.push([temp,15,52,52]);
-  if (clickX > temp &&
-    clickX < temp+52 &&
-    clickY > 15 &&
-    clickY < 67
+  if (settingsClickX > temp &&
+    settingsClickX < temp+52 &&
+    settingsClickY > 15 &&
+    settingsClickY < 67
   ) {
     savedData.volume = (savedData.volume + 1) % 3;
     localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
@@ -165,14 +182,14 @@ function handleVolumeIcon(settingsWidth) {
   context.drawImage(iconList[1],savedData.volume * 13,0,13,13,temp,15,52,52);
 }
 
-function handleMobileButton(settingsWidth) {
+function mobileButton(settingsWidth) {
   let temp = settingsWidth/12;
   context.strokeRect(630-11*temp,80,10*temp,40);
   clickableRegions.push([630-11*temp,80,10*temp,40])
-  if (clickX > 630-11*temp &&
-    clickX < 630-temp &&
-    clickY > 80 &&
-    clickY < 120
+  if (settingsClickX > 630-11*temp &&
+    settingsClickX < 630-temp &&
+    settingsClickY > 80 &&
+    settingsClickY < 120
   ) {
     savedData.mobileMode = !savedData.mobileMode;
     localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
@@ -183,7 +200,7 @@ function handleMobileButton(settingsWidth) {
   context.fillText(savedData.mobileMode ? 'Mobile' : 'PC',630-settingsWidth/2,114);
 }
 
-function handleLevelsScreen() {
+function levelsScreen() {
   context.font = '24px "Press Start 2P"';
   context.fillStyle = 'black'
   for (let i = 0; i < 6; i++) {
@@ -195,13 +212,24 @@ function handleLevelsScreen() {
       } else {
         clickableRegions.push([38+100*i,90+100*j,64,64]);
         context.fillText(j*6+i+1,70+100*i,136+100*j,64,64);
+        if (clickX > 38+100*i &&
+          clickX < 102+100*i &&
+          clickY > 90+100*j &&
+          clickY < 154+100*j
+        ) {
+          curLevel = j*6+i+1;
+          transition = {
+            frame: 10,
+            endScreen: 'inLevel'
+          };
+        }
       }
     }
   }
-  handleHomeIcon();
+  homeIcon();
 }
 
-function handleHomeIcon() {
+function homeIcon() {
   if (clickX > 15 &&
     clickX < 67 &&
     clickY > 15 &&
@@ -214,6 +242,15 @@ function handleHomeIcon() {
   }
 
   context.drawImage(iconList[2],15,15,52,52);
+  clickableRegions.push([15,15,52,52]);
+}
+
+function inLevelScreen() {
+  resetLevelButton();
+}
+
+function resetLevelButton() {
+  context.drawImage(iconList[4],15,15,52,52);
   clickableRegions.push([15,15,52,52]);
 }
 
