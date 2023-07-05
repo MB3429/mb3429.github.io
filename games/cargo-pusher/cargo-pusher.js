@@ -34,6 +34,7 @@ function load() {
   localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
 }
 
+// Game function loop
 function tickGame() {
   clickableRegions.length = 0;
   context.clearRect(0, 0, width, height)
@@ -71,18 +72,9 @@ function tickGame() {
       break;
     }
   }
-
-  if (transitionIn !== undefined) {
-    if (transitionIn.frame > 0) {
-      context.fillStyle = `rgba(0,0,0,${transitionIn.frame/10})`;
-      context.fillRect(0,0,width,height);
-      transitionIn.frame--;
-    } else {
-      transitionIn = undefined;
-    }
-  }
   
-  if (transition !== undefined) {
+  // Handles transition fade-outs
+  if (transition) {
     settingsOpen = false;
     if (transition.frame > 0) {
       transition.frame--;
@@ -94,22 +86,66 @@ function tickGame() {
       curScreen = transition.endScreen;
       transition = undefined;
       transitionIn = { frame: 10 };
-      context.fillStyle = 'black';
-      context.fillRect(0,0,width,height);
     }
   }
 
-  settingsIcon();
-  if (settingsOpen) {
-    settingsScreen();
+  if (transitionIn) {
+    if (transitionIn.frame > 0) {
+      context.fillStyle = `rgba(0,0,0,${transitionIn.frame/10})`;
+      context.fillRect(0,0,width,height);
+      transitionIn.frame--;
+    } else {
+      transitionIn = undefined;
+    }
   }
+
+  settingsScreen();
 
   clickX = -100;
   clickY = -100;
 }
 
+// Handles the settings button and settings screen
+function settingsScreen() {
+  iconSize = [width-67,15,52,52];
+  if (regionContains(settingsClickX, settingsClickY, ...iconSize)) settingsOpen = !settingsOpen;
+
+  if (settingsOpen) {
+    context.lineWidth = 4;
+    const settingsWidth = 190;
+    const settingsHeight = 125;
+    context.clearRect(630-settingsWidth,10,settingsWidth,settingsHeight);
+    context.strokeRect(630-settingsWidth,10,settingsWidth,settingsHeight);
+    context.drawImage(iconList[0],13,0,13,13,...iconSize);
+
+    // Change volume button
+    iconSize = [640-settingsWidth,15,52,52];
+    if (regionContains(settingsClickX, settingsClickY, ...iconSize)) {
+      savedData.volume = (savedData.volume + 1) % 3;
+      localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
+    }
+    context.drawImage(iconList[1],savedData.volume * 13,0,13,13,...iconSize);
+
+    // Toggle Mobile/PC button
+    iconSize = [630-11*settingsWidth/12,80,5*settingsWidth/6,40];
+    context.strokeRect(...iconSize);
+    if (regionContains(settingsClickX, settingsClickY, ...iconSize)) {
+      savedData.mobileMode = !savedData.mobileMode;
+      localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
+    }
+    context.fillStyle = 'black';
+    context.textAlign = 'center';
+    context.font = '24px "Press Start 2P"';
+    context.fillText(savedData.mobileMode ? 'Mobile' : 'PC',630-settingsWidth/2,114);
+
+  } else {
+    context.drawImage(iconList[0],0,0,13,13, ...iconSize)
+  }
+}
+
+// Handles the start screen of the game
 function startScreen() {
-  iconSize = [width/2-150, height/2+50, 300, 60]
+  iconSize = [width/2-150, height/2+50, 300, 60];
   if (regionContains(clickX, clickY, ...iconSize)) {
     transition = {
       frame: 20,
@@ -119,7 +155,6 @@ function startScreen() {
 
   context.lineWidth = 4;
   context.strokeRect(...iconSize);
-  clickableRegions.push(iconSize);
 
   context.fillStyle = 'black';
   context.textAlign = 'center';
@@ -130,62 +165,14 @@ function startScreen() {
   context.drawImage(spriteList[4],width/2-4,height/2-32,64,64);
   context.drawImage(spriteList[6],width/2+60,height/2-32,64,64);
 
-  if (transition === undefined) {
-    context.drawImage(spriteList[0],0,0,32,32,width/2-132,height/2-32,64,64);
-    context.drawImage(spriteList[2],width/2-68,height/2-32,64,64);
+  let offset = 0;
+  if (transition) offset = Math.min((20-transition.frame)*6.4,64);
 
-  } else if (transition.frame > 10) {
-    context.drawImage(spriteList[0],0,0,32,32,width/2-132+6.4*(20-transition.frame),height/2-32,64,64);
-    context.drawImage(spriteList[2],width/2-68+6.4*(20-transition.frame),height/2-32,64,64);
-
-  } else {
-    context.drawImage(spriteList[0],0,0,32,32,width/2-68,height/2-32,64,64);
-    context.drawImage(spriteList[2],width/2-4,height/2-32,64,64);
-  }
+  context.drawImage(spriteList[0],0,0,32,32,width/2-132+offset,height/2-32,64,64);
+  context.drawImage(spriteList[2],width/2-68+offset,height/2-32,64,64);
 }
 
-function settingsIcon() {
-  iconSize = [width-67,15,52,52]
-  clickableRegions.push(iconSize);
-  if (regionContains(settingsClickX, settingsClickY, ...iconSize)) settingsOpen = !settingsOpen;
-  if (!settingsOpen) context.drawImage(iconList[0],0,0,13,13,width-15-52,15,52,52)
-}
-
-function settingsScreen() {
-  context.lineWidth = 4;
-  const settingsWidth = 190;
-  const settingsHeight = 125;
-  context.clearRect(630-settingsWidth,10,settingsWidth,settingsHeight);
-  context.strokeRect(630-settingsWidth,10,settingsWidth,settingsHeight);
-  context.drawImage(iconList[0],13,0,13,13,width-15-52,15,52,52);
-  volumeIcon(settingsWidth);
-  mobileButton(settingsWidth);
-}
-
-function volumeIcon(settingsWidth) {
-  iconSize = [640-settingsWidth,15,52,52];
-  clickableRegions.push(iconSize);
-  if (regionContains(settingsClickX, settingsClickY, ...iconSize)) {
-    savedData.volume = (savedData.volume + 1) % 3;
-    localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
-  }
-  context.drawImage(iconList[1],savedData.volume * 13,0,13,13,...iconSize);
-}
-
-function mobileButton(settingsWidth) {
-  iconSize = [630-11*settingsWidth/12,80,5*settingsWidth/6,40];
-  context.strokeRect(...iconSize);
-  clickableRegions.push(iconSize);
-  if (regionContains(settingsClickX, settingsClickY, ...iconSize)) {
-    savedData.mobileMode = !savedData.mobileMode;
-    localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
-  }
-  context.fillStyle = 'black';
-  context.textAlign = 'center';
-  context.font = '24px "Press Start 2P"';
-  context.fillText(savedData.mobileMode ? 'Mobile' : 'PC',630-settingsWidth/2,114);
-}
-
+// Handles the level select screen of the game
 function levelsScreen() {
   context.font = '24px "Press Start 2P"';
   context.fillStyle = 'black';
@@ -197,7 +184,6 @@ function levelsScreen() {
       if (savedData.lastLevelUnlocked < j*6+i+1) {
         context.drawImage(iconList[3],46+100*i,98+100*j,48,48);
       } else {
-        clickableRegions.push(iconSize);
         context.fillText(j*6+i+1,70+100*i,136+100*j,64,64);
         if (regionContains(clickX, clickY, ...iconSize)) {
           curLevel = j*6+i+1;
@@ -209,14 +195,9 @@ function levelsScreen() {
       }
     }
   }
-  homeIcon();
-}
 
-function homeIcon() {
   iconSize = [15,15,52,52]
   context.drawImage(iconList[2], ...iconSize);
-  clickableRegions.push(iconSize);
-
   if (regionContains(clickX, clickY, ...iconSize)) {
     transition = {
       frame: 10,
@@ -225,31 +206,44 @@ function homeIcon() {
   }
 }
 
+// Handles the screen when in a level
 function inLevelScreen() {
-  resetLevelButton();
-}
+  context.font = '32px "Press Start 2P"';
+  context.fillStyle = 'black';
+  context.textAlign = 'center'
+  context.fillText(curLevel, width/2, 50)
 
-function resetLevelButton() {
-  iconSize = [15,15,52,52]
+  // Reset level button
+  iconSize = [15,15,52,52];
   context.drawImage(iconList[4], ...iconSize);
-  clickableRegions.push([15,15,52,52]);
-
   if (regionContains(clickX, clickY, ...iconSize)) {
     console.log('reset level');
   }
+
+  // Exit level button
+  iconSize = [15,82,52,52];
+  context.drawImage(iconList[5], ...iconSize);
+  if (regionContains(clickX, clickY, ...iconSize)) {
+    transition = {
+      frame: 10,
+      endScreen: 'levels'
+    }
+  }
 }
 
+// Detects mouse movement and handles hover effects
 canvas.addEventListener('mousemove', Event => {
   mouseX = (Event.clientX - canvas.offsetLeft)/canvas.offsetWidth*640;
   mouseY = (Event.clientY - canvas.offsetTop)/canvas.offsetHeight*480;
   canvas.style.cursor = 'default';
   if (!savedData.mobileMode && !transition && !transitionIn &&
-    clickableRegions.find(region => regionContains(mouseX,mouseY,...region))
+    clickableRegions.find(region => regionContains(mouseX,mouseY,...region, false))
   ) {
     canvas.style.cursor = 'pointer';
   }
 })
 
+// Detects clicks
 canvas.addEventListener('click', () => {
   if (!transition && !transitionIn) {
     clickX = mouseX;
@@ -257,7 +251,9 @@ canvas.addEventListener('click', () => {
   }
 })
 
-function regionContains(targetX,targetY,x,y,width,height) {
+// Utility function for detecting if a region contains a point
+function regionContains(targetX,targetY,x,y,width,height,push = true) {
+  if (push) clickableRegions.push([x,y,width,height]);
   return targetX > x &&
     targetX < x + width &&
     targetY > y &&
