@@ -3,18 +3,21 @@ const context = canvas.getContext('2d');
 context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
-let curScreen = 'start';
-let curLevel = undefined;
+
+let curScreen = 'inLevel';
+let curLevel = 1;
 let settingsOpen = false;
+
 const spriteList = document.getElementsByClassName('sprite');
 const iconList = document.getElementsByClassName('icon');
-let inputTimeout = true;
-let interval;
+let input = undefined;
+
 let savedData = JSON.parse(localStorage.getItem('cargo-pusher')) || {
   lastLevelUnlocked: 10,
   volume: 2,
   mobileMode: false
 };
+
 let mouseX = 0;
 let mouseY = 0;
 const clickableRegions = [];
@@ -23,14 +26,18 @@ let clickX = -100;
 let clickY = -100;
 let settingsClickX = clickX;
 let settingsClickY = clickY;
+
 let transition = undefined;
 let transitionIn = undefined;
+
+const allLvlData = document.getElementById('level-data').children;
+let curLvlData = JSON.parse(allLvlData[curLevel-1].textContent);
 
 canvas.onload = load();
 
 function load() {
   document.getElementById('game-title').classList.add('hidden')
-  interval = setInterval(tickGame, 100);
+  setInterval(tickGame, 100);
   localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
 }
 
@@ -103,6 +110,7 @@ function tickGame() {
 
   clickX = -100;
   clickY = -100;
+  input = undefined;
 }
 
 // Handles the settings button and settings screen
@@ -187,6 +195,7 @@ function levelsScreen() {
         context.fillText(j*6+i+1,70+100*i,136+100*j,64,64);
         if (regionContains(clickX, clickY, ...iconSize)) {
           curLevel = j*6+i+1;
+          curLvlData = JSON.parse(allLvlData[curLevel-1].textContent)
           transition = {
             frame: 10,
             endScreen: 'inLevel'
@@ -208,16 +217,24 @@ function levelsScreen() {
 
 // Handles the screen when in a level
 function inLevelScreen() {
+  playerMove(input);
+
+  const lvlWidth = curLvlData.floor[0].length;
+  const lvlHeight = curLvlData.floor.length;
+  printLayer(curLvlData.floor, lvlWidth, lvlHeight, 32);
+  printLayer(curLvlData.items, lvlWidth, lvlHeight, 32);
+  printPlayer(lvlWidth, lvlHeight, 32);
+
   context.font = '32px "Press Start 2P"';
   context.fillStyle = 'black';
-  context.textAlign = 'center'
-  context.fillText(curLevel, width/2, 50)
+  context.textAlign = 'center';
+  context.fillText(curLevel, width/2, 50);
 
   // Reset level button
   iconSize = [15,15,52,52];
   context.drawImage(iconList[4], ...iconSize);
   if (regionContains(clickX, clickY, ...iconSize)) {
-    console.log('reset level');
+    curLvlData = JSON.parse(allLvlData[curLevel-1].textContent);
   }
 
   // Exit level button
@@ -227,9 +244,99 @@ function inLevelScreen() {
     transition = {
       frame: 10,
       endScreen: 'levels'
+    };
+  }
+}
+
+// Draw a layer of the level
+function printLayer(data, lvlWidth, lvlHeight, tileSize) {
+  let startX = (width-tileSize*lvlWidth)/2;
+  let startY = (height-tileSize*lvlHeight)/2;
+  for (let i = 0; i < lvlWidth; i++) {
+    for (let j = 0; j < lvlHeight; j++) {
+      iconSize = [startX + i*tileSize, startY + j*tileSize, tileSize, tileSize];
+      let tile = data[j][i];
+      switch (tile[0]) {
+        case 'f': {
+          context.drawImage(spriteList[1], ...iconSize);
+          break;
+        }
+
+        case 'c': {
+          context.drawImage(spriteList[['l','h'].indexOf(tile[1])+2], ...iconSize);
+          break;
+        }
+
+        case 't': {
+          context.drawImage(spriteList[['b','m','f'].indexOf(tile[1])+4],32*tile[2],0,32,32, ...iconSize);
+          break;
+        }
+
+        case 'w': {
+          context.drawImage(spriteList[['o'].indexOf(tile[1])+7], ...iconSize)
+        }
+
+        default: {}
+      }
     }
   }
 }
+
+// Draw player sprite onto canvas
+function printPlayer(lvlWidth, lvlHeight, tileSize) {
+  let startX = (width-tileSize*lvlWidth)/2;
+  let startY = (height-tileSize*lvlHeight)/2;
+  iconSize = [startX + curLvlData.playerX*tileSize, startY + curLvlData.playerY*tileSize, tileSize, tileSize];
+  context.drawImage(spriteList[0], curLvlData.playerDir*32, 0, 32, 32, ...iconSize);
+}
+
+function playerMove(move) {
+  let dx = 0;
+  let dy = 0;
+  switch (move) {
+    case 'up': {
+      curLvlData.playerDir = 1;
+      dy--;
+      break;
+    }
+    case 'down': {
+      curLvlData.playerDir = 3;
+      dy++;
+      break;
+    }
+    case 'left': {
+      curLvlData.playerDir = 2;
+      dx--;
+      break;
+    }
+    case 'right': {
+      curLvlData.playerDir = 0;
+      dx++;
+      break;
+    }
+  }
+
+  const nextTile1 = curLvlData.items[curLvlData.playerY + dy][curLvlData.playerX + dx];
+  let pushable = 2;
+
+  if (!['wo','tf0','tf1','tf2','tf3'].includes(nextTile1)) {
+    if (['cl','ch','r'].includes(nextTile1)) {
+      if (attemptPush(curLvlData.playerY + dy, curLvlData.playerX + dx, dx, dy)) {
+        curLvlData.playerY += dy;
+        curLvlData.playerX += dx;
+      };
+    } else {
+      curLvlData.playerY += dy;
+      curLvlData.playerX += dx;
+    }
+  }
+}
+
+// Attempt to push an item
+function attemptPush(posX, posY, dx, dy) {
+  return true;
+}
+
 
 // Detects mouse movement and handles hover effects
 canvas.addEventListener('mousemove', Event => {
@@ -248,6 +355,32 @@ canvas.addEventListener('click', () => {
   if (!transition && !transitionIn) {
     clickX = mouseX;
     clickY = mouseY;
+  }
+})
+
+// Detects key presses and converts them to player moves
+canvas.addEventListener('keydown', Event => {
+  switch(Event.key.toLowerCase()) {
+    case 'w':
+    case 'arrowup': {
+      input = 'up';
+      break;
+    }
+    case 's':
+    case 'arrowdown': {
+      input = 'down';
+      break;
+    }
+    case 'd':
+    case 'arrowright': {
+      input = 'right';
+      break;
+    }
+    case 'a':
+    case 'arrowleft': {
+      input = 'left';
+      break;
+    }
   }
 })
 
