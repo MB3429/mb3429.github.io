@@ -33,3 +33,7 @@ main {
 #level-data {
   display: none;
 }
+
+header {
+  position: absolute;
+}

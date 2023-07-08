@@ -11,6 +11,8 @@ let settingsOpen = false;
 const spriteList = document.getElementsByClassName('sprite');
 const iconList = document.getElementsByClassName('icon');
 let input = undefined;
+let pushAmount = 0;
+let pushable = [];
 
 let savedData = JSON.parse(localStorage.getItem('cargo-pusher')) || {
   lastLevelUnlocked: 10,
@@ -273,7 +275,27 @@ function printLayer(data, lvlWidth, lvlHeight, tileSize) {
         }
 
         case 'w': {
-          context.drawImage(spriteList[['o'].indexOf(tile[1])+7], ...iconSize)
+          context.drawImage(spriteList[['o'].indexOf(tile[1])+7], ...iconSize);
+          break;
+        }
+
+        case 'r': {
+          let right = ['c','r'].includes(data[j][i+1][0]);
+          let up =    ['c','r'].includes(data[j-1][i][0]);
+          let left =  ['c','r'].includes(data[j][i-1][0]);
+          let down =  ['c','r'].includes(data[j+1][i][0]);
+          if (true) {
+            right |= (j === curLvlData.playerY && i+1 === curLvlData.playerX && curLvlData.playerDir === 2);
+            up |=  (j-1 === curLvlData.playerY && i === curLvlData.playerX && curLvlData.playerDir === 3);
+            left |= (j === curLvlData.playerY && i-1 === curLvlData.playerX && curLvlData.playerDir === 0);
+            down |= (j+1 === curLvlData.playerY && i === curLvlData.playerX && curLvlData.playerDir === 1);
+          }
+          context.drawImage(spriteList[8],
+            38*(right+2*up+4*left+8*down),
+            0, 38, 38,
+            iconSize[0]-3, iconSize[1]-3,
+            38, 38);
+          break;
         }
 
         default: {}
@@ -314,29 +336,132 @@ function playerMove(move) {
       dx++;
       break;
     }
-  }
-
-  const nextTile1 = curLvlData.items[curLvlData.playerY + dy][curLvlData.playerX + dx];
-  let pushable = 2;
-
-  if (!['wo','tf0','tf1','tf2','tf3'].includes(nextTile1)) {
-    if (['cl','ch','r'].includes(nextTile1)) {
-      if (attemptPush(curLvlData.playerY + dy, curLvlData.playerX + dx, dx, dy)) {
-        curLvlData.playerY += dy;
-        curLvlData.playerX += dx;
-      };
-    } else {
-      curLvlData.playerY += dy;
-      curLvlData.playerX += dx;
+    default: {
+      return;
     }
   }
+
+  pushAmount = 3;
+
+  pushable.length = 0;
+  const emptyRow = [...curLvlData.items[0]].fill('')
+  for (let i = 0; i < curLvlData.items.length; i++) {
+    pushable.push([...emptyRow])
+  }
+
+  if (attemptPush(curLvlData.playerX + dx, curLvlData.playerY + dy, dx, dy)) {
+    completePush(['right','up','left','down'].indexOf(move));
+    curLvlData.playerY += dy;
+    curLvlData.playerX += dx;
+  }
 }
 
-// Attempt to push an item
+// Check what items should be pushed
 function attemptPush(posX, posY, dx, dy) {
-  return true;
+  const item = curLvlData.items[posY][posX];
+  if (pushable[posY][posX] === true || pushable[posY][posX] === false) return pushable[posY][posX];
+  switch (item[0]) {
+    case 't':
+    case 'w': {
+      pushable[posY][posX] = false;
+      return false;
+      break;
+    }
+
+    case 'c': {
+      if (attemptPush(posX + dx, posY + dy, dx, dy)) {
+        pushable[posY][posX] = true;
+        return true;
+      }
+      break;
+    }
+
+    case 'r': {
+      if (attemptPush(posX + dx, posY + dy, dx, dy)) {
+        if (pushable[posY + dx][posX - dy] === '') {
+          pushable[posY + dx][posX - dy] = '...';
+          attemptPush(posX - dy, posY + dx, dx, dy);
+        }
+        if (pushable[posY - dx][posX + dy] === '') {
+          pushable[posY - dx][posX + dy] = '...';
+          attemptPush(posX + dy, posY - dx, dx, dy);
+        }
+        if (pushable[posY - dy][posX - dx] === '') {
+          pushable[posY - dy][posX - dx] = '...';
+          attemptPush(posX - dx, posY - dy, dx, dy);
+        }
+
+        pushable[posY][posX] = true;
+        return true;
+      }
+      break;
+    }
+
+    case undefined: {
+      return true;
+    }
+  }
+  pushable[posY][posX] = false;
+  return false;
 }
 
+// Actually pushes 
+function completePush(dir) {
+  const width = curLvlData.items[0].length;
+  const height = curLvlData.items.length;
+  switch (dir) {
+    case 0: {
+      for (let i = width - 1; i >= 0; i--) {
+        for (let j = 0; j < height; j++) {
+          if (pushable[j][i] === true) {
+            curLvlData.items[j][i + 1] = curLvlData.items[j][i];
+            curLvlData.items[j][i] = '';
+          }
+        }
+      }
+      break;
+    }
+
+    case 1: {
+      for (let i = 0; i < width; i++) {
+        for (let j = 0; j < height; j++) {
+          if (pushable[j][i] === true) {
+            curLvlData.items[j - 1][i] = curLvlData.items[j][i];
+            curLvlData.items[j][i] = '';
+          }
+        }
+      }
+      break;
+    }
+
+    case 2: {
+      for (let i = 0; i < width; i++) {
+        for (let j = 0; j < height; j++) {
+          if (pushable[j][i] === true) {
+            curLvlData.items[j][i - 1] = curLvlData.items[j][i];
+            curLvlData.items[j][i] = '';
+          }
+        }
+      }
+      break;
+    }
+
+    case 3: {
+      for (let i = 0; i < width; i++) {
+        for (let j = height - 1; j >= 0; j--) {
+          if (pushable[j][i] === true) {
+            curLvlData.items[j + 1][i] = curLvlData.items[j][i];
+            curLvlData.items[j][i] = '';
+          }
+        }
+      }
+      break;
+    }
+  
+    default:
+      break;
+  }
+}
 
 // Detects mouse movement and handles hover effects
 canvas.addEventListener('mousemove', Event => {
