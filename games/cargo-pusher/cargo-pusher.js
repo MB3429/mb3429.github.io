@@ -4,8 +4,8 @@ context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
 
-let curScreen = 'inLevel';
-let curLevel = 1;
+let curScreen = 'start';
+let curLevel = undefined;
 let settingsOpen = false;
 
 const spriteList = document.getElementsByClassName('sprite');
@@ -15,7 +15,7 @@ let pushAmount = 0;
 let pushable = [];
 
 let savedData = JSON.parse(localStorage.getItem('cargo-pusher')) || {
-  lastLevelUnlocked: 10,
+  lastLevelUnlocked: 1,
   volume: 2,
   mobileMode: false
 };
@@ -33,7 +33,7 @@ let transition = undefined;
 let transitionIn = undefined;
 
 const allLvlData = document.getElementById('level-data').children;
-let curLvlData = JSON.parse(allLvlData[curLevel-1].textContent);
+let curLvlData = undefined;
 
 canvas.onload = load();
 
@@ -172,14 +172,18 @@ function startScreen() {
   context.fillText('Play', width/2, height/2+103);
   context.fillText('Cargo Pusher', width/2, height/2-50);
 
-  context.drawImage(spriteList[4],width/2-4,height/2-32,64,64);
-  context.drawImage(spriteList[6],width/2+60,height/2-32,64,64);
+  context.drawImage(spriteList[4],0,0,32,32,width/2,height/2-32,64,64);
+  context.drawImage(spriteList[1],width/2+64,height/2-32,64,64)
+  context.drawImage(spriteList[6],0,0,32,32,width/2+64,height/2-32,64,64);
 
   let offset = 0;
   if (transition) offset = Math.min((20-transition.frame)*6.4,64);
 
-  context.drawImage(spriteList[0],0,0,32,32,width/2-132+offset,height/2-32,64,64);
-  context.drawImage(spriteList[2],width/2-68+offset,height/2-32,64,64);
+  context.drawImage(spriteList[1],width/2-128,height/2-32,64,64)
+  context.drawImage(spriteList[1],width/2-64,height/2-32,64,64)
+
+  context.drawImage(spriteList[0],0,0,32,32,width/2-128+offset,height/2-32,64,64);
+  context.drawImage(spriteList[2],width/2-64+offset,height/2-32,64,64);
 }
 
 // Handles the level select screen of the game
@@ -341,19 +345,41 @@ function playerMove(move) {
     }
   }
 
-  pushAmount = 3;
-
   pushable.length = 0;
-  const emptyRow = [...curLvlData.items[0]].fill('')
+  const emptyRow = [...curLvlData.items[0]].fill('');
   for (let i = 0; i < curLvlData.items.length; i++) {
-    pushable.push([...emptyRow])
+    pushable.push([...emptyRow]);
   }
 
-  if (attemptPush(curLvlData.playerX + dx, curLvlData.playerY + dy, dx, dy)) {
+  pushAmount = 0;
+
+  if (attemptPush(curLvlData.playerX + dx, curLvlData.playerY + dy, dx, dy) && pushAmount <= 3) {
     completePush(['right','up','left','down'].indexOf(move));
     curLvlData.playerY += dy;
     curLvlData.playerX += dx;
+    if (detectWin()) {
+      transition = {
+        frame: 10,
+        endScreen: 'levels'
+      }
+      if (savedData.lastLevelUnlocked === curLevel) {
+        savedData.lastLevelUnlocked++;
+        localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
+      }
+    }
   }
+}
+
+// Detect if the game is over
+function detectWin() {
+  const floor = curLvlData.floor;
+  const items = curLvlData.items;
+  for (let i = 0; i < floor.length; i++) {
+    for (let j = 0; j < floor[0].length; j++) {
+      if (floor[i][j][0] === 't' && items[i][j][0] !== 'c') return false;
+    }
+  }
+  return true;
 }
 
 // Check what items should be pushed
@@ -370,6 +396,8 @@ function attemptPush(posX, posY, dx, dy) {
 
     case 'c': {
       if (attemptPush(posX + dx, posY + dy, dx, dy)) {
+        if (item === 'cl') pushAmount++;
+        else pushAmount += 2;
         pushable[posY][posX] = true;
         return true;
       }
@@ -405,7 +433,7 @@ function attemptPush(posX, posY, dx, dy) {
   return false;
 }
 
-// Actually pushes 
+// Actually pushes
 function completePush(dir) {
   const width = curLvlData.items[0].length;
   const height = curLvlData.items.length;
