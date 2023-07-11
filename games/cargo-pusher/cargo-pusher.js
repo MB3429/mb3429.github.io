@@ -4,8 +4,8 @@ context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
 
-let curScreen = 'start';
-let curLevel = undefined;
+let curScreen = 'inLevel';
+let curLevel = 1;
 let settingsOpen = false;
 
 const spriteList = document.getElementsByClassName('sprite');
@@ -33,7 +33,7 @@ let transition = undefined;
 let transitionIn = undefined;
 
 const allLvlData = document.getElementById('level-data').children;
-let curLvlData = undefined;
+let curLvlData = JSON.parse(allLvlData[0].textContent);
 
 canvas.onload = load();
 
@@ -172,9 +172,9 @@ function startScreen() {
   context.fillText('Play', width/2, height/2+103);
   context.fillText('Cargo Pusher', width/2, height/2-50);
 
-  context.drawImage(spriteList[4],0,0,32,32,width/2,height/2-32,64,64);
+  context.drawImage(spriteList[6],0,0,32,32,width/2,height/2-32,64,64);
   context.drawImage(spriteList[1],width/2+64,height/2-32,64,64)
-  context.drawImage(spriteList[6],0,0,32,32,width/2+64,height/2-32,64,64);
+  context.drawImage(spriteList[8],0,0,32,32,width/2+64,height/2-32,64,64);
 
   let offset = 0;
   if (transition) offset = Math.min((20-transition.frame)*6.4,64);
@@ -257,7 +257,7 @@ function inLevelScreen() {
 // Draw a layer of the level
 function printLayer(data, lvlWidth, lvlHeight, tileSize) {
   let startX = (width-tileSize*lvlWidth)/2;
-  let startY = (height-tileSize*lvlHeight)/2;
+  let startY = (height-tileSize*lvlHeight)/2 + 20;
   for (let i = 0; i < lvlWidth; i++) {
     for (let j = 0; j < lvlHeight; j++) {
       iconSize = [startX + i*tileSize, startY + j*tileSize, tileSize, tileSize];
@@ -269,17 +269,37 @@ function printLayer(data, lvlWidth, lvlHeight, tileSize) {
         }
 
         case 'c': {
-          context.drawImage(spriteList[['l','h'].indexOf(tile[1])+2], ...iconSize);
+          switch (tile[1]) {
+            case 'l': {
+              context.drawImage(spriteList[2], ...iconSize);
+              break;
+            }
+
+            case 'h': {
+              context.drawImage(spriteList[3], ...iconSize);
+              break;
+            }
+
+            case 't': {
+              context.drawImage(spriteList[4], 0, tile[2]*32, 32, 32, ...iconSize);
+              break;
+            }
+
+            case 'w': {
+              context.drawImage(spriteList[5], tile[2]*32, 0, 32, 32, ...iconSize);
+              break;
+            }
+          }
           break;
         }
 
         case 't': {
-          context.drawImage(spriteList[['b','m','f'].indexOf(tile[1])+4],32*tile[2],0,32,32, ...iconSize);
+          context.drawImage(spriteList[['b','m','f'].indexOf(tile[1])+6],32*tile[2],0,32,32, ...iconSize);
           break;
         }
 
         case 'w': {
-          context.drawImage(spriteList[['o'].indexOf(tile[1])+7], ...iconSize);
+          context.drawImage(spriteList[9], ...iconSize);
           break;
         }
 
@@ -294,7 +314,7 @@ function printLayer(data, lvlWidth, lvlHeight, tileSize) {
             left |= (j === curLvlData.playerY && i-1 === curLvlData.playerX && curLvlData.playerDir === 0);
             down |= (j+1 === curLvlData.playerY && i === curLvlData.playerX && curLvlData.playerDir === 1);
           }
-          context.drawImage(spriteList[8],
+          context.drawImage(spriteList[10],
             38*(right+2*up+4*left+8*down),
             0, 38, 38,
             iconSize[0]-3, iconSize[1]-3,
@@ -311,7 +331,7 @@ function printLayer(data, lvlWidth, lvlHeight, tileSize) {
 // Draw player sprite onto canvas
 function printPlayer(lvlWidth, lvlHeight, tileSize) {
   let startX = (width-tileSize*lvlWidth)/2;
-  let startY = (height-tileSize*lvlHeight)/2;
+  let startY = (height-tileSize*lvlHeight)/2 + 20;
   iconSize = [startX + curLvlData.playerX*tileSize, startY + curLvlData.playerY*tileSize, tileSize, tileSize];
   context.drawImage(spriteList[0], curLvlData.playerDir*32, 0, 32, 32, ...iconSize);
 }
@@ -386,6 +406,7 @@ function detectWin() {
 function attemptPush(posX, posY, dx, dy) {
   const item = curLvlData.items[posY][posX];
   if (pushable[posY][posX] === true || pushable[posY][posX] === false) return pushable[posY][posX];
+
   switch (item[0]) {
     case 't':
     case 'w': {
@@ -395,17 +416,81 @@ function attemptPush(posX, posY, dx, dy) {
     }
 
     case 'c': {
-      if (attemptPush(posX + dx, posY + dy, dx, dy)) {
-        if (item === 'cl') pushAmount++;
-        else pushAmount += 2;
-        pushable[posY][posX] = true;
-        return true;
+      switch (item[1]) {
+        case 'l': {
+          if (attemptPush(posX + dx, posY + dy, dx, dy)) {
+            pushAmount++;
+            pushable[posY][posX] = true;
+            return true;
+          }
+          break;
+        }
+
+        case 'h': {
+          if (attemptPush(posX + dx, posY + dy, dx, dy)) {
+            pushAmount += 2;
+            pushable[posY][posX] = true;
+            return true;
+          }
+          break;
+        }
+        
+        case 't': {
+          pushable[posY][posX] = '...';
+          if (attemptPush(posX + dx, posY + dy, dx, dy)) {
+            const bottomOrTop = item[2] === '0' ? 1 : -1;
+            if (dy !== 0) {
+              if (dy === -bottomOrTop) pushAmount += 2
+              pushable[posY][posX] = true;
+              pushable[posY + bottomOrTop][posX] = true;
+              return true;
+            }
+
+            if (pushable[posY + bottomOrTop][posX] === '') {
+              const connectedTile = attemptPush(posX, posY + bottomOrTop, dx, dy)
+              if (connectedTile) pushAmount += 2;
+              pushable[posY][posX] = connectedTile;
+              pushable[posY + bottomOrTop][posX] = connectedTile;
+              return connectedTile;
+
+            } else {
+              return attemptPush(posX + dx, posY + dy, dx ,dy);
+            }
+          }
+          break;
+        }
+        
+        case 'w': {
+          pushable[posY][posX] = '...';
+          if (attemptPush(posX + dx, posY + dy, dx, dy)) {
+            const bottomOrTop = item[2] === '0' ? 1 : -1;
+            if (dx !== 0) {
+              if (dx === -bottomOrTop) pushAmount += 2
+              pushable[posY][posX] = true;
+              pushable[posY][posX + bottomOrTop] = true;
+              return true;
+            }
+
+            if (pushable[posY][posX + bottomOrTop] === '') {
+              const connectedTile = attemptPush(posX + bottomOrTop, posY, dx, dy)
+              if (connectedTile) pushAmount += 2;
+              pushable[posY][posX] = connectedTile;
+              pushable[posY][posX + bottomOrTop] = connectedTile;
+              return connectedTile;
+
+            } else {
+              return attemptPush(posX + dx, posY + dy, dx ,dy);
+            }
+          }
+          break;
+        }
       }
       break;
     }
 
     case 'r': {
       if (attemptPush(posX + dx, posY + dy, dx, dy)) {
+        pushable[posY][posX] = '...';
         if (pushable[posY + dx][posX - dy] === '') {
           pushable[posY + dx][posX - dy] = '...';
           attemptPush(posX - dy, posY + dx, dx, dy);
@@ -513,6 +598,7 @@ canvas.addEventListener('click', () => {
 
 // Detects key presses and converts them to player moves
 canvas.addEventListener('keydown', Event => {
+  if (transition || transitionIn) return;
   switch(Event.key.toLowerCase()) {
     case 'w':
     case 'arrowup': {
