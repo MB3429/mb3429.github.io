@@ -4,8 +4,8 @@ context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
 
-let curScreen = 'inLevel';
-let curLevel = 2;
+let curScreen = 'start';
+let curLevel = undefined;
 let settingsOpen = false;
 
 const spriteList = document.getElementsByClassName('sprite');
@@ -33,7 +33,7 @@ let transition = undefined;
 let transitionIn = undefined;
 
 const allLvlData = document.getElementById('level-data').children;
-let curLvlData = JSON.parse(allLvlData[1].textContent);
+let curLvlData = undefined;
 
 canvas.onload = load();
 
