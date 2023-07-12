@@ -4,8 +4,8 @@ context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
 
-let curScreen = 'inLevel';
-let curLevel = 1;
+let curScreen = 'start';
+let curLevel = undefined;
 let settingsOpen = false;
 
 const spriteList = document.getElementsByClassName('sprite');
@@ -33,13 +33,13 @@ let transition = undefined;
 let transitionIn = undefined;
 
 const allLvlData = document.getElementById('level-data').children;
-let curLvlData = JSON.parse(allLvlData[0].textContent);
+let curLvlData = undefined;
 
 canvas.onload = load();
 
 function load() {
   document.getElementById('game-title').classList.add('hidden')
-  setInterval(tickGame, 100);
+  setInterval(tickGame, 50);
   localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
 }
 
@@ -158,7 +158,7 @@ function startScreen() {
   iconSize = [width/2-150, height/2+50, 300, 60];
   if (regionContains(clickX, clickY, ...iconSize)) {
     transition = {
-      frame: 20,
+      frame: 25,
       endScreen: 'levels'
     };
   }
@@ -177,7 +177,7 @@ function startScreen() {
   context.drawImage(spriteList[8],0,0,32,32,width/2+64,height/2-32,64,64);
 
   let offset = 0;
-  if (transition) offset = Math.min((20-transition.frame)*6.4,64);
+  if (transition) offset = Math.min((25-transition.frame)*64/15,64);
 
   context.drawImage(spriteList[1],width/2-128,height/2-32,64,64)
   context.drawImage(spriteList[1],width/2-64,height/2-32,64,64)
@@ -619,6 +619,11 @@ canvas.addEventListener('keydown', Event => {
     case 'arrowleft': {
       input = 'left';
       break;
+    }
+    case 'r': {
+      if (curScreen === 'inLevel') {
+        curLvlData = JSON.parse(allLvlData[curLevel-1].textContent);
+      }
     }
   }
 })
