@@ -4,8 +4,8 @@ context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
 
-let curScreen = 'start';
-let curLevel = undefined;
+let curScreen = 'inLevel';
+let curLevel = 2;
 let settingsOpen = false;
 
 const spriteList = document.getElementsByClassName('sprite');
@@ -33,12 +33,11 @@ let transition = undefined;
 let transitionIn = undefined;
 
 const allLvlData = document.getElementById('level-data').children;
-let curLvlData = undefined;
+let curLvlData = JSON.parse(allLvlData[1].textContent);
 
 canvas.onload = load();
 
 function load() {
-  document.getElementById('game-title').classList.add('hidden')
   setInterval(tickGame, 50);
   localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
 }
@@ -230,6 +229,7 @@ function inLevelScreen() {
   printLayer(curLvlData.floor, lvlWidth, lvlHeight, 32);
   printLayer(curLvlData.items, lvlWidth, lvlHeight, 32);
   printPlayer(lvlWidth, lvlHeight, 32);
+  if (savedData.mobileMode) printMovement(lvlWidth, lvlHeight, 32);
 
   context.font = '32px "Press Start 2P"';
   context.fillStyle = 'black';
@@ -336,6 +336,37 @@ function printPlayer(lvlWidth, lvlHeight, tileSize) {
   context.drawImage(spriteList[0], curLvlData.playerDir*32, 0, 32, 32, ...iconSize);
 }
 
+// Draw the mobile controls
+function printMovement(lvlWidth, lvlHeight, tileSize) {
+  const startX = (width-tileSize*lvlWidth)/2;
+  const startY = (height-tileSize*lvlHeight)/2 + 20;
+  let move = undefined;
+
+  const emptyRow = [...curLvlData.items[0]].fill('');
+
+  for (let i = 0; i < 4; i++) {
+    const dx = (i === 0) - (i === 2);
+    const dy = (i === 3) - (i === 1);
+
+    pushable.length = 0;
+    for (let i = 0; i < curLvlData.items.length; i++) {
+      pushable.push([...emptyRow]);
+    }
+    pushAmount = 0;
+
+    if (attemptPush(curLvlData.playerX + dx, curLvlData.playerY + dy, dx, dy) && pushAmount <= 3) {
+      iconSize = [startX + (curLvlData.playerX + dx)*tileSize + 4, startY + (curLvlData.playerY + dy)*tileSize + 4, tileSize - 8, tileSize - 8];
+      context.drawImage(iconList[6], i*12, 0, 12, 12, ...iconSize);
+      if (regionContains(clickX, clickY, ...iconSize, false)) move = i;
+    } 
+  }
+
+  if (move !== undefined) {
+    playerMove(['right','up','left','down'][move]);
+  }
+}
+
+// Execute the player move
 function playerMove(move) {
   let dx = 0;
   let dy = 0;
@@ -598,7 +629,7 @@ canvas.addEventListener('click', () => {
 
 // Detects key presses and converts them to player moves
 canvas.addEventListener('keydown', Event => {
-  if (transition || transitionIn) return;
+  if (transition || transitionIn || savedData.mobileMode) return;
   switch(Event.key.toLowerCase()) {
     case 'w':
     case 'arrowup': {
