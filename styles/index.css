@@ -15,7 +15,10 @@ main a {
   cursor: pointer;
   text-decoration: none;
   color: black;
-  font-size: 30px;
+  font-size: 45px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  font-weight: bold;
 }
 
 @media (max-width: 1400px) {
@@ -34,4 +37,8 @@ main a {
   main {
     grid-template-columns: repeat(1, minmax(300px, 400px));
   }
+}
+
+#cargo-pusher {
+  background-image: url(/games/cargo-pusher/thumbnail.png);
 }

@@ -9,8 +9,8 @@ main {
 }
 
 #game-canvas {
-  width: 900px;
-  background-color: orange;
+  width: min(90vw, 1000px);
+  background-color: lightblue;
   aspect-ratio: 4/3;
   border-radius: 5px;
   border: none;

@@ -19,6 +19,7 @@ let savedData = JSON.parse(localStorage.getItem('cargo-pusher')) || {
   volume: 2,
   mobileMode: false
 };
+localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
 
 let mouseX = 0;
 let mouseY = 0;
@@ -35,12 +36,7 @@ let transitionIn = undefined;
 const allLvlData = document.getElementById('level-data').children;
 let curLvlData = undefined;
 
-canvas.onload = load();
-
-function load() {
-  setInterval(tickGame, 50);
-  localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
-}
+setInterval(tickGame, 50);
 
 // Game function loop
 function tickGame() {
@@ -609,8 +605,9 @@ function completePush(dir) {
 
 // Detects mouse movement and handles hover effects
 canvas.addEventListener('mousemove', Event => {
-  mouseX = (Event.clientX - canvas.offsetLeft)/canvas.offsetWidth*640;
-  mouseY = (Event.clientY - canvas.offsetTop)/canvas.offsetHeight*480;
+  const bounding = canvas.getBoundingClientRect();
+  mouseX = (Event.clientX - bounding.x)/canvas.offsetWidth*640;
+  mouseY = (Event.clientY - bounding.y)/canvas.offsetHeight*480;
   canvas.style.cursor = 'default';
   if (!savedData.mobileMode && !transition && !transitionIn &&
     clickableRegions.find(region => regionContains(mouseX,mouseY,...region, false))
