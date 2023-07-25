@@ -4,8 +4,8 @@ context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
 
-let curScreen = 'start';
-let curLevel = undefined;
+let curScreen = 'inLevel';
+let curLevel = 6;
 
 const spriteList = document.getElementsByClassName('sprite');
 const iconList = document.getElementsByClassName('icon');
@@ -30,7 +30,7 @@ let transition = undefined;
 let transitionIn = undefined;
 
 const allLvlData = document.getElementById('level-data').children;
-let curLvlData = undefined;
+let curLvlData = JSON.parse(allLvlData[5].textContent);
 
 setInterval(tickGame, 50);
 
@@ -357,7 +357,26 @@ function detectWin() {
   const items = curLvlData.items;
   for (let i = 0; i < floor.length; i++) {
     for (let j = 0; j < floor[0].length; j++) {
-      if (floor[i][j][0] === 't' && items[i][j][0] !== 'c') return false;
+      const crate = items[i][j];
+      const truck = floor[i][j];
+      if (truck[0] === 't') {
+        if (crate[0] === 'c') {
+          if (crate[1] === 't') {
+            const truckDir = truck[2] * 1;
+            const crateDir = 3 - crate[2] * 2;
+            if (truckDir % 2 !== crateDir % 2) return false;
+            if (truck[1] === 'b' && truckDir !== crateDir) return false;
+
+          } else if (crate[1] === 'w') {
+            const truckDir = truck[2] * 1;
+            const crateDir = crate[2] * 2;
+            if (truckDir % 2 !== crateDir % 2) return false;
+            if (truck[1] === 'b' && truckDir !== crateDir) return false;
+          }
+        } else {
+          return false;
+        }
+      }
     }
   }
   return true;
