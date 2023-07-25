@@ -4,7 +4,7 @@ context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
 
-let curScreen = 'levels';
+let curScreen = 'start';
 let curLevel = undefined;
 
 const spriteList = document.getElementsByClassName('sprite');
