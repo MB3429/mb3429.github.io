@@ -5,7 +5,7 @@ const width = canvas.width;
 const height = canvas.height;
 
 let curScreen = 'inLevel';
-let curLevel = 6;
+let curLevel = 12;
 
 const spriteList = document.getElementsByClassName('sprite');
 const iconList = document.getElementsByClassName('icon');
@@ -30,7 +30,7 @@ let transition = undefined;
 let transitionIn = undefined;
 
 const allLvlData = document.getElementById('level-data').children;
-let curLvlData = JSON.parse(allLvlData[5].textContent);
+let curLvlData = JSON.parse(allLvlData[11].textContent);
 
 setInterval(tickGame, 50);
 
