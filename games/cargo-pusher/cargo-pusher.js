@@ -314,39 +314,17 @@ function printMovement(lvlWidth, lvlHeight, tileSize) {
   }
 
   if (move !== undefined) {
-    playerMove(['right','up','left','down'][move]);
+    playerMove(move);
   }
 }
 
 // Execute the player move
 function playerMove(move) {
-  let dx = 0;
-  let dy = 0;
-  switch (move) {
-    case 'up': {
-      curLvlData.playerDir = 1;
-      dy--;
-      break;
-    }
-    case 'down': {
-      curLvlData.playerDir = 3;
-      dy++;
-      break;
-    }
-    case 'left': {
-      curLvlData.playerDir = 2;
-      dx--;
-      break;
-    }
-    case 'right': {
-      curLvlData.playerDir = 0;
-      dx++;
-      break;
-    }
-    default: {
-      return;
-    }
-  }
+  if (move === undefined) return;
+  
+  const dx = (move === 0) - (move === 2);
+  const dy = (move === 3) - (move === 1);
+  curLvlData.playerDir = move;
 
   pushable.length = 0;
   const emptyRow = [...curLvlData.items[0]].fill('');
@@ -357,7 +335,7 @@ function playerMove(move) {
   pushAmount = 0;
 
   if (attemptPush(curLvlData.playerX + dx, curLvlData.playerY + dy, dx, dy) && pushAmount <= 3) {
-    completePush(['right','up','left','down'].indexOf(move));
+    completePush(move);
     curLvlData.playerY += dy;
     curLvlData.playerX += dx;
     if (detectWin()) {
@@ -586,22 +564,22 @@ canvas.addEventListener('keydown', Event => {
   switch(Event.key.toLowerCase()) {
     case 'w':
     case 'arrowup': {
-      input = 'up';
+      input = 1;
       break;
     }
     case 's':
     case 'arrowdown': {
-      input = 'down';
+      input = 3;
       break;
     }
     case 'd':
     case 'arrowright': {
-      input = 'right';
+      input = 0;
       break;
     }
     case 'a':
     case 'arrowleft': {
-      input = 'left';
+      input = 2;
       break;
     }
     case 'r': {
