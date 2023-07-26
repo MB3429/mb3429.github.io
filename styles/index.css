@@ -8,17 +8,37 @@ main {
 main a {
   background-color: lightblue;
   aspect-ratio: 16/9;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   border-radius: 10px;
   cursor: pointer;
   text-decoration: none;
   color: black;
   font-size: 45px;
-  background-repeat: no-repeat;
-  background-size: contain;
   font-weight: bold;
+  overflow: hidden;
+  display: grid;
+  text-align: center;
+  align-items: center;
+  isolation: isolate;
+  position: relative;
+}
+
+main a::before {
+  content: '';
+  background-size: cover;
+  background-repeat: no-repeat;
+  z-index: -1;
+  position: absolute;
+  inset: -3px;
+  filter: blur(3px);
+  transition: filter 0.2s;
+}
+
+main a:hover::before {
+  filter: none;
+}
+
+#cargo-pusher::before {
+  background-image: url(/games/cargo-pusher/thumbnail.png);
 }
 
 @media (max-width: 1400px) {
@@ -37,8 +57,4 @@ main a {
   main {
     grid-template-columns: repeat(1, minmax(300px, 400px));
   }
-}
-
-#cargo-pusher {
-  background-image: url(/games/cargo-pusher/thumbnail.png);
 }

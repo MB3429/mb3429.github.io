@@ -17,7 +17,7 @@ let savedData = JSON.parse(localStorage.getItem('cargo-pusher')) || {
   lastLevelUnlocked: 1
 };
 localStorage.setItem('cargo-pusher', JSON.stringify(savedData));
-let mobileMode
+let mobileMode;
 
 let mouseX = 0;
 let mouseY = 0;
@@ -37,7 +37,7 @@ setInterval(tickGame, 50);
 // Game function loop
 function tickGame() {
   clickableRegions.length = 0;
-  context.clearRect(0, 0, width, height)
+  context.clearRect(0, 0, width, height);
 
   switch (curScreen) {
     case 'start': {
@@ -130,8 +130,8 @@ function startScreen() {
   let offset = 0;
   if (transition) offset = Math.min((25-transition.frame)*64/15,64);
 
-  context.drawImage(spriteList[1],width/2-128,height/2-72,64,64)
-  context.drawImage(spriteList[1],width/2-64,height/2-72,64,64)
+  context.drawImage(spriteList[1],width/2-128,height/2-72,64,64);
+  context.drawImage(spriteList[1],width/2-64,height/2-72,64,64);
 
   context.drawImage(spriteList[0],0,0,32,32,width/2-128+offset,height/2-72,64,64);
   context.drawImage(spriteList[2],width/2-64+offset,height/2-72,64,64);
@@ -152,7 +152,7 @@ function levelsScreen() {
         context.fillText(j*6+i+1,70+100*i,136+100*j,64,64);
         if (regionContains(clickX, clickY, ...iconSize)) {
           curLevel = j*6+i+1;
-          curLvlData = JSON.parse(allLvlData[curLevel-1].textContent)
+          curLvlData = JSON.parse(allLvlData[curLevel-1].textContent);
           transition = {
             frame: 10,
             endScreen: 'inLevel'
