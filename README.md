@@ -7,8 +7,8 @@ The home of unblocked games and various utilities.
  - Cargo Pusher (nearly complete)
      Puzzle game about loading crates onto trucks
    
- - Parkour Ltd. (wip)
-     Parkour game with restricted (limited) movement
+ - Limited Parkour (wip)
+     Parkour game with restricted movement
 
  - Cargo Warehouse (not started)
      Open world and more complex version of Cargo Pusher
