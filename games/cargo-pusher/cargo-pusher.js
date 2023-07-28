@@ -4,8 +4,8 @@ context.imageSmoothingEnabled = false;
 const width = canvas.width;
 const height = canvas.height;
 
-let curScreen = 'start';
-let curLevel = undefined;
+let curScreen = 'inLevel';
+let curLevel = 21;
 
 const spriteList = document.getElementsByClassName('sprite');
 const iconList = document.getElementsByClassName('icon');
@@ -30,7 +30,7 @@ let transition = undefined;
 let transitionIn = undefined;
 
 const allLvlData = document.getElementById('level-data').children;
-let curLvlData = undefined;
+let curLvlData = JSON.parse(allLvlData[curLevel-1].textContent);
 
 setInterval(tickGame, 50);
 
@@ -396,6 +396,7 @@ function attemptPush(posX, posY, dx, dy) {
     }
 
     case 'c': {
+      pushable[posY][posX] = '...';
       switch (item[1]) {
         case 'l': {
           if (attemptPush(posX + dx, posY + dy, dx, dy)) {
@@ -416,7 +417,6 @@ function attemptPush(posX, posY, dx, dy) {
         }
         
         case 't': {
-          pushable[posY][posX] = '...';
           if (attemptPush(posX + dx, posY + dy, dx, dy)) {
             const bottomOrTop = item[2] === '0' ? 1 : -1;
             if (dy !== 0) {
